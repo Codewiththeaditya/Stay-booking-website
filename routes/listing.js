@@ -22,6 +22,8 @@ router.get('/', wrapAsync(async(req,res)=>{
     res.render("listings/index.ejs", {allListings});
 }));
 
+
+
 //New Route :
 router.get("/new", wrapAsync(async(req,res)=>{
     res.render("listings/new.ejs");
@@ -32,6 +34,7 @@ router.post("/", validateListing, wrapAsync(async(req,res)=>{
     
     let newListing = new Listing(req.body.listing);
     await newListing.save();
+    req.flash("success","Listing added successfully !")
     res.redirect("/listings");
 }));
 
@@ -39,8 +42,13 @@ router.post("/", validateListing, wrapAsync(async(req,res)=>{
 router.get("/:id/edit", wrapAsync(async (req,res)=>{
     let {id} = req.params;
     const listing = await Listing.findById(id);
-
-    res.render("listings/edit.ejs",{listing});
+    if(!listing){
+        req.flash("error","Listing you requested for does not exist !");
+        res.redirect("/listings");
+    }else{
+        res.render("listings/edit.ejs",{listing});
+    }
+    
 }));
 
 
@@ -48,6 +56,8 @@ router.get("/:id/edit", wrapAsync(async (req,res)=>{
 router.put("/:id", validateListing, wrapAsync(async (req,res)=>{
     const {id} = req.params;
     await Listing.findByIdAndUpdate(id, {...req.body.listing});
+    req.flash("success","Listing updated successfully !")
+
     res.redirect(`/listings/${id}`);
 }));
 
@@ -56,17 +66,23 @@ router.put("/:id", validateListing, wrapAsync(async (req,res)=>{
 router.delete("/:id", wrapAsync(async(req,res)=>{
     let {id} = req.params;
     await Listing.findByIdAndDelete(id);
+    req.flash("success","Listing Deleted successfully !")
+
     res.redirect('/listings');
 }));
-
 
 //show Route :
 router.get("/:id", wrapAsync(async(req,res)=>{
     let {id} = req.params;
 
     const listing = await Listing.findById(id).populate("reviews");
-
-    res.render("listings/show.ejs",{listing});
+    if(!listing){
+        req.flash("error","Listing you requested for does not exist !");
+        res.redirect("/listings");
+    }else{
+        res.render("listings/show.ejs",{listing});
+    }
+    
 }));
 
 
